@@ -1,0 +1,59 @@
+automation:
+  - alias: Anthropic daily spend warning
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.anthropic_cost_today
+        above: 25
+    actions:
+      - action: notify.notify
+        data:
+          message: "Anthropic API spend today is ${{ states('sensor.anthropic_cost_today') }}."
+
+  - alias: Anthropic estimated remaining credit warning
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.anthropic_estimated_credit_remaining
+        below: 50
+    actions:
+      - action: notify.notify
+        data:
+          message: "Estimated Anthropic credit remaining is ${{ states('sensor.anthropic_estimated_credit_remaining') }}."
+
+  - alias: Anthropic projected month end over budget
+    triggers:
+      - trigger: template
+        value_template: >
+          {{ state_attr('sensor.anthropic_estimated_credit_remaining', 'projected_month_end_cost') | float(0)
+             > state_attr('sensor.anthropic_estimated_credit_remaining', 'configured_budget') | float(0) }}
+    actions:
+      - action: notify.notify
+        data:
+          message: "Projected Anthropic month-end cost exceeds the configured budget."
+
+  - alias: Anthropic single API key monthly token warning
+    triggers:
+      - trigger: template
+        value_template: >
+          {{ states.sensor
+             | selectattr('entity_id', 'search', 'anthropic.*api_key')
+             | map(attribute='state')
+             | map('float', 0)
+             | max(default=0) > 1000000 }}
+    actions:
+      - action: notify.notify
+        data:
+          message: "At least one Anthropic API key has exceeded the token threshold."
+
+  - alias: Anthropic unknown API key appeared
+    triggers:
+      - trigger: state
+        entity_id: sensor.anthropic_cost_month_to_date
+    conditions:
+      - condition: template
+        value_template: >
+          {{ state_attr('sensor.anthropic_cost_month_to_date', 'unavailable_categories') is not none
+             or state_attr('sensor.anthropic_cost_month_to_date', 'sample_records') is not none }}
+    actions:
+      - action: notify.notify
+        data:
+          message: "Review Anthropic API key sensors for any new key IDs without local aliases."

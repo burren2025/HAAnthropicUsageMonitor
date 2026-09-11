@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anthropic Usage Monitor",
+        "description": "Use an Anthropic Admin API key with organization Usage and Cost Admin API access.",
+        "data": {
+          "admin_api_key": "Anthropic Admin API key",
+          "organization_name": "Friendly organization/account name",
+          "monthly_budget": "Manual monthly credit or budget",
+          "daily_spend_warning": "Daily spend warning",
+          "remaining_credit_warning": "Remaining credit warning",
+          "poll_interval_minutes": "Polling interval in minutes"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The Anthropic Admin API key is invalid or lacks Usage and Cost Admin API access.",
+      "cannot_connect": "Could not connect to the Anthropic Admin API."
+    }
+  }
+}

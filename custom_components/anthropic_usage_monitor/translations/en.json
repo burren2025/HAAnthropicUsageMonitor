@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Anthropic Usage Monitor",
+        "description": "Use an Anthropic Admin API key with organization Usage and Cost Admin API access.",
+        "data": {
+          "admin_api_key": "Anthropic Admin API key",
+          "organization_name": "Friendly organization/account name",
+          "monthly_budget": "Manual monthly credit or budget",
+          "daily_spend_warning": "Daily spend warning",
+          "remaining_credit_warning": "Remaining credit warning",
+          "poll_interval_minutes": "Polling interval in minutes"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update Anthropic Admin API key",
+        "description": "Enter a replacement Anthropic Admin API key.",
+        "data": {"admin_api_key": "Anthropic Admin API key"}
+      }
+    },
+    "error": {
+      "invalid_auth": "The Anthropic Admin API key is invalid or lacks Usage and Cost Admin API access.",
+      "cannot_connect": "Could not connect to the Anthropic Admin API."
+    },
+    "abort": {
+      "already_configured": "This Anthropic account is already configured.",
+      "reauth_successful": "Anthropic Admin API key updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Anthropic Usage Monitor options",
+        "description": "Aliases must be JSON objects such as {\"key_abc\": \"Production\"}. Leave API key blank to keep the current key.",
+        "data": {
+          "admin_api_key": "New Anthropic Admin API key",
+          "monthly_budget": "Manual monthly credit or budget",
+          "daily_spend_warning": "Daily spend warning",
+          "remaining_credit_warning": "Remaining credit warning",
+          "poll_interval_minutes": "Polling interval in minutes",
+          "api_key_aliases": "API key aliases JSON",
+          "workspace_aliases": "Workspace aliases JSON",
+          "top_n_models": "Top model sensors to create"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The Anthropic Admin API key is invalid or lacks Usage and Cost Admin API access.",
+      "cannot_connect": "Could not connect to the Anthropic Admin API.",
+      "invalid_json": "Aliases must be valid JSON."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cost_today": {"name": "Cost today"},
+      "cost_month_to_date": {"name": "Cost month to date"},
+      "requests_today": {"name": "Requests today"},
+      "requests_month_to_date": {"name": "Requests month to date"},
+      "input_tokens_today": {"name": "Input tokens today"},
+      "output_tokens_today": {"name": "Output tokens today"},
+      "total_tokens_today": {"name": "Total tokens today"},
+      "input_tokens_month_to_date": {"name": "Input tokens month to date"},
+      "output_tokens_month_to_date": {"name": "Output tokens month to date"},
+      "total_tokens_month_to_date": {"name": "Total tokens month to date"},
+      "estimated_credit_remaining": {"name": "Estimated credit remaining"},
+      "api_key_usage": {"name": "API key {name} usage"},
+      "workspace_usage": {"name": "Workspace {name} monthly spend"},
+      "user_usage": {"name": "User {name} usage"},
+      "model_usage": {"name": "Model {name} tokens"}
+    }
+  },
+  "issues": {
+    "invalid_admin_key": {
+      "title": "Anthropic Admin API key is invalid",
+      "description": "Update the Anthropic Usage Monitor API key in integration options."
+    }
+  }
+}

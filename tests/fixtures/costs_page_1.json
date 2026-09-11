@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-01-01T00:00:00Z",
+      "ending_at": "2026-01-02T00:00:00Z",
+      "results": [
+        {
+          "amount": "123.45",
+          "cost_type": "tokens",
+          "currency": "USD",
+          "description": "Claude Sonnet 5 Usage - Input Tokens",
+          "model": "claude-sonnet-5",
+          "service_tier": "standard",
+          "token_type": "uncached_input_tokens",
+          "workspace_id": "wrkspc_test"
+        }
+      ]
+    }
+  ],
+  "has_more": false,
+  "next_page": null
+}

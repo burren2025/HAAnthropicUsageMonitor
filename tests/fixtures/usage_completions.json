@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-01-01T00:00:00Z",
+      "ending_at": "2026-01-02T00:00:00Z",
+      "results": [
+        {
+          "account_id": "user_test",
+          "api_key_id": "apikey_test",
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 25
+          },
+          "cache_read_input_tokens": 50,
+          "model": "claude-sonnet-5",
+          "output_tokens": 100,
+          "service_tier": "standard",
+          "uncached_input_tokens": 250,
+          "workspace_id": "wrkspc_test"
+        }
+      ]
+    }
+  ],
+  "has_more": false,
+  "next_page": null
+}
