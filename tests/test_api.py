@@ -9,6 +9,7 @@ import pytest
 from custom_components.anthropic_usage_monitor.api import (
     AnthropicAdminClient,
     AnthropicAuthError,
+    AnthropicPermissionError,
     AnthropicRateLimitError,
     AnthropicUsageError,
 )
@@ -96,6 +97,46 @@ async def test_invalid_key_maps_to_auth_error():
 
     with pytest.raises(AnthropicAuthError):
         await client.fetch_usage_report(starting_at=date(2026, 1, 1), ending_at=date(2026, 1, 2))
+
+
+@pytest.mark.asyncio
+async def test_validation_accepts_admin_inventory_access_without_usage_access():
+    session = FakeSession(
+        [
+            FakeResponse(200, {"data": [], "has_more": False}),
+        ]
+    )
+    client = AnthropicAdminClient(session, "admin-key")
+
+    await client.validate_key()
+
+    assert session.calls[0]["url"].endswith("/v1/organizations/workspaces")
+
+
+@pytest.mark.asyncio
+async def test_validation_allows_permission_only_failures():
+    session = FakeSession(
+        [
+            FakeResponse(403, text="missing billing data permission"),
+            FakeResponse(403, text="missing billing data permission"),
+            FakeResponse(403, text="missing billing data permission"),
+        ]
+    )
+    client = AnthropicAdminClient(session, "admin-key")
+
+    await client.validate_key()
+
+    assert len(session.calls) == 3
+
+
+@pytest.mark.asyncio
+async def test_forbidden_endpoint_maps_to_permission_error():
+    client = AnthropicAdminClient(
+        FakeSession([FakeResponse(403, text="missing billing data permission")]), "admin-key"
+    )
+
+    with pytest.raises(AnthropicPermissionError):
+        await client.fetch_cost_report(starting_at=date(2026, 1, 1), ending_at=date(2026, 1, 2))
 
 
 @pytest.mark.asyncio

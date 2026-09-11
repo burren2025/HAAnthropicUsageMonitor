@@ -17,7 +17,7 @@ QueryValue = str | int | float | list[str]
 
 _LOGGER = logging.getLogger(__name__)
 ANTHROPIC_VERSION = "2023-06-01"
-USER_AGENT = "HAAnthropicUsageMonitor/0.1.0 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
+USER_AGENT = "HAAnthropicUsageMonitor/0.1.1 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
 
 
 class AnthropicUsageError(Exception):
@@ -40,6 +40,10 @@ class AnthropicUnavailableError(AnthropicUsageError):
     """Raised for temporary transport/server failures."""
 
 
+class AnthropicPermissionError(AnthropicUsageError):
+    """Raised when a valid credential appears to lack endpoint permission."""
+
+
 @dataclass(slots=True)
 class AnthropicAdminClient:
     """Small aiohttp wrapper around Anthropic Admin APIs."""
@@ -49,7 +53,37 @@ class AnthropicAdminClient:
     base_url: str = API_BASE_URL
 
     async def validate_key(self) -> None:
-        """Validate credentials with a low-cost analytics request."""
+        """Validate that the credential can reach at least one Admin API endpoint."""
+        errors: list[AnthropicUsageError] = []
+        probes = (
+            self.fetch_workspaces,
+            self.fetch_api_keys,
+            lambda: self.fetch_usage_report(
+                starting_at=date.today(),
+                ending_at=date.today() + timedelta(days=1),
+                limit=1,
+            ),
+        )
+        for probe in probes:
+            try:
+                await probe()
+                return
+            except AnthropicUsageError as err:
+                errors.append(err)
+
+        if errors and all(isinstance(err, AnthropicAuthError) for err in errors):
+            raise errors[0]
+        if errors and all(isinstance(err, AnthropicPermissionError) for err in errors):
+            _LOGGER.info(
+                "Anthropic Admin API key validation reached Anthropic but all probe endpoints were unauthorized"
+            )
+            return
+        if errors:
+            raise errors[-1]
+        raise AnthropicUnavailableError("Anthropic Admin API validation failed")
+
+    async def validate_usage_access(self) -> None:
+        """Validate Usage and Cost Admin API access specifically."""
         today = date.today()
         await self.fetch_usage_report(starting_at=today, ending_at=today + timedelta(days=1), limit=1)
 
@@ -157,7 +191,7 @@ class AnthropicAdminClient:
         raise AnthropicUnavailableError("Anthropic API request failed")
 
     async def _handle_response(self, response: ClientResponse) -> dict[str, Any]:
-        if response.status in (401, 403):
+        if response.status == 401:
             detail = _redact_message(await response.text())
             _LOGGER.warning(
                 "Anthropic Admin API authentication failed with HTTP %s: %s",
@@ -166,6 +200,16 @@ class AnthropicAdminClient:
             )
             raise AnthropicAuthError(
                 f"Anthropic Admin API key is invalid or unauthorized: {detail}",
+                response.status,
+            )
+        if response.status == 403:
+            detail = _redact_message(await response.text())
+            _LOGGER.warning(
+                "Anthropic Admin API request lacks permission for this endpoint: %s",
+                detail,
+            )
+            raise AnthropicPermissionError(
+                f"Anthropic Admin API key lacks permission for this endpoint: {detail}",
                 response.status,
             )
         if response.status == 429:
