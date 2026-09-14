@@ -53,7 +53,7 @@ The UI setup asks for:
 - Optional warning thresholds
 - Polling interval, default 60 minutes, minimum 30 minutes
 
-Options allow updating the API key, polling interval, budget, thresholds, top-N model sensor count, and local alias maps for API key IDs and workspace IDs.
+Options allow updating the polling interval, budget, thresholds, top-N model sensor count, and local alias maps for API key IDs and workspace IDs. The stored Admin API key is not displayed or changed in Options. If the key becomes invalid or is revoked, Home Assistant starts a separate reauthentication flow for entering a replacement.
 
 Alias maps are JSON objects:
 

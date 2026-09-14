@@ -11,6 +11,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -218,7 +219,9 @@ class AnthropicUsageCoordinator(DataUpdateCoordinator[AnthropicUsageData]):
         try:
             return await self._collect(date(now.year, now.month, 1), now + timedelta(days=1), now)
         except AnthropicAuthError as err:
-            raise UpdateFailed("Anthropic Admin API key is invalid or unauthorized") from err
+            raise ConfigEntryAuthFailed(
+                "Anthropic Admin API key is invalid or unauthorized"
+            ) from err
         except AnthropicUsageError as err:
             raise UpdateFailed(str(err)) from err
 
@@ -281,7 +284,9 @@ class AnthropicUsageCoordinator(DataUpdateCoordinator[AnthropicUsageData]):
         top_n = int(self.config_entry.options.get(CONF_TOP_N_MODELS, DEFAULT_TOP_N_MODELS))
         model_map = dict(
             sorted(
-                by_model.items(), key=lambda item: (item[1].cost, item[1].total_tokens), reverse=True
+                by_model.items(),
+                key=lambda item: (item[1].cost, item[1].total_tokens),
+                reverse=True,
             )[:top_n]
         )
         return AnthropicUsageData(
@@ -311,6 +316,8 @@ class AnthropicUsageCoordinator(DataUpdateCoordinator[AnthropicUsageData]):
     ) -> list[dict[str, Any]]:
         try:
             return await awaitable
+        except AnthropicAuthError:
+            raise
         except AnthropicUsageError as err:
             unavailable[name] = str(err)
             return []
@@ -326,7 +333,9 @@ class AnthropicUsageCoordinator(DataUpdateCoordinator[AnthropicUsageData]):
         workspace_records: dict[str, WorkspaceRecord] = {}
         user_records: dict[str, UserRecord] = {}
 
-        for key in await self._optional_report(unavailable, "api_key_inventory", self.client.fetch_api_keys()):
+        for key in await self._optional_report(
+            unavailable, "api_key_inventory", self.client.fetch_api_keys()
+        ):
             record = _api_key_record_from_api(key)
             if record.id:
                 api_key_records[record.id] = record
@@ -341,7 +350,9 @@ class AnthropicUsageCoordinator(DataUpdateCoordinator[AnthropicUsageData]):
         for key_id in by_key:
             api_key_records.setdefault(key_id, APIKeyRecord(id=key_id, source="usage"))
         for workspace_id in by_workspace:
-            workspace_records.setdefault(workspace_id, WorkspaceRecord(id=workspace_id, source="usage"))
+            workspace_records.setdefault(
+                workspace_id, WorkspaceRecord(id=workspace_id, source="usage")
+            )
         for user_id in by_user:
             user_records.setdefault(user_id, UserRecord(id=user_id, source="usage"))
         for key_record in api_key_records.values():

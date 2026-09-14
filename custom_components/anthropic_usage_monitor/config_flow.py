@@ -18,9 +18,9 @@ from .const import (
     CONF_MONTHLY_BUDGET,
     CONF_ORG_NAME,
     CONF_POLL_INTERVAL_MINUTES,
-    CONF_WORKSPACE_ALIASES,
     CONF_REMAINING_CREDIT_WARNING,
     CONF_TOP_N_MODELS,
+    CONF_WORKSPACE_ALIASES,
     DEFAULT_ORG_NAME,
     DEFAULT_POLL_INTERVAL_MINUTES,
     DEFAULT_TOP_N_MODELS,
@@ -60,7 +60,9 @@ class AnthropicUsageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_POLL_INTERVAL_MINUTES: user_input[CONF_POLL_INTERVAL_MINUTES],
                         CONF_MONTHLY_BUDGET: user_input.get(CONF_MONTHLY_BUDGET),
                         CONF_DAILY_SPEND_WARNING: user_input.get(CONF_DAILY_SPEND_WARNING),
-                        CONF_REMAINING_CREDIT_WARNING: user_input.get(CONF_REMAINING_CREDIT_WARNING),
+                        CONF_REMAINING_CREDIT_WARNING: user_input.get(
+                            CONF_REMAINING_CREDIT_WARNING
+                        ),
                         CONF_API_KEY_ALIASES: "{}",
                         CONF_WORKSPACE_ALIASES: "{}",
                         CONF_TOP_N_MODELS: DEFAULT_TOP_N_MODELS,
@@ -73,8 +75,10 @@ class AnthropicUsageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> config_entries.ConfigFlowResult:
-        self._reauth_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+    async def async_step_reauth(
+        self, _entry_data: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Start reauthentication for an existing entry."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -91,12 +95,10 @@ class AnthropicUsageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Anthropic Usage Monitor reauth validation failed: %s", err)
                 errors["base"] = "cannot_connect"
             if not errors:
-                entry = self._reauth_entry
-                data = dict(entry.data)
-                data[CONF_ADMIN_API_KEY] = user_input[CONF_ADMIN_API_KEY]
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_ADMIN_API_KEY: user_input[CONF_ADMIN_API_KEY]},
+                )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_ADMIN_API_KEY): str}),
@@ -108,48 +110,27 @@ class AnthropicUsageConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
-        return AnthropicUsageOptionsFlow(config_entry)
+        return AnthropicUsageOptionsFlow()
 
 
 class AnthropicUsageOptionsFlow(config_entries.OptionsFlow):
     """Handle options updates."""
-
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input.get(CONF_ADMIN_API_KEY):
-                try:
-                    await _validate_key(self.hass, user_input[CONF_ADMIN_API_KEY])
-                except AnthropicAuthError as err:
-                    _LOGGER.warning("Anthropic Usage Monitor options authentication failed: %s", err)
-                    errors["base"] = "invalid_auth"
-                except AnthropicUsageError as err:
-                    _LOGGER.warning("Anthropic Usage Monitor options validation failed: %s", err)
-                    errors["base"] = "cannot_connect"
             for key in (CONF_API_KEY_ALIASES, CONF_WORKSPACE_ALIASES):
                 try:
                     json.loads(user_input.get(key) or "{}")
                 except json.JSONDecodeError:
                     errors[key] = "invalid_json"
             if not errors:
-                data = dict(self.entry.data)
-                if user_input.get(CONF_ADMIN_API_KEY):
-                    data[CONF_ADMIN_API_KEY] = user_input[CONF_ADMIN_API_KEY]
-                    self.hass.config_entries.async_update_entry(self.entry, data=data)
-                options = {
-                    key: value
-                    for key, value in user_input.items()
-                    if key != CONF_ADMIN_API_KEY
-                }
-                return self.async_create_entry(title="", data=options)
+                return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="init",
-            data_schema=_options_schema(self.entry),
+            data_schema=_options_schema(self.config_entry),
             errors=errors,
         )
 
@@ -178,7 +159,6 @@ def _options_schema(entry: config_entries.ConfigEntry) -> vol.Schema:
     options = entry.options
     return vol.Schema(
         {
-            vol.Optional(CONF_ADMIN_API_KEY): str,
             vol.Required(
                 CONF_POLL_INTERVAL_MINUTES,
                 default=options.get(CONF_POLL_INTERVAL_MINUTES, DEFAULT_POLL_INTERVAL_MINUTES),

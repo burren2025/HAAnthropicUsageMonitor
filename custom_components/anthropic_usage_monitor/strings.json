@@ -12,11 +12,40 @@
           "remaining_credit_warning": "Remaining credit warning",
           "poll_interval_minutes": "Polling interval in minutes"
         }
+      },
+      "reauth_confirm": {
+        "title": "Update Anthropic Admin API key",
+        "description": "Enter a replacement Anthropic Admin API key.",
+        "data": {"admin_api_key": "Anthropic Admin API key"}
       }
     },
     "error": {
       "invalid_auth": "The Anthropic Admin API key is invalid or lacks Usage and Cost Admin API access.",
       "cannot_connect": "Could not connect to the Anthropic Admin API."
+    },
+    "abort": {
+      "already_configured": "This Anthropic account is already configured.",
+      "reauth_successful": "Anthropic Admin API key updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Anthropic Usage Monitor options",
+        "description": "Aliases must be JSON objects such as {\"key_abc\": \"Production\"}.",
+        "data": {
+          "monthly_budget": "Manual monthly credit or budget",
+          "daily_spend_warning": "Daily spend warning",
+          "remaining_credit_warning": "Remaining credit warning",
+          "poll_interval_minutes": "Polling interval in minutes",
+          "api_key_aliases": "API key aliases JSON",
+          "workspace_aliases": "Workspace aliases JSON",
+          "top_n_models": "Top model sensors to create"
+        }
+      }
+    },
+    "error": {
+      "invalid_json": "Aliases must be valid JSON."
     }
   }
 }

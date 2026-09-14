@@ -32,9 +32,8 @@
     "step": {
       "init": {
         "title": "Anthropic Usage Monitor options",
-        "description": "Aliases must be JSON objects such as {\"key_abc\": \"Production\"}. Leave API key blank to keep the current key.",
+        "description": "Aliases must be JSON objects such as {\"key_abc\": \"Production\"}.",
         "data": {
-          "admin_api_key": "New Anthropic Admin API key",
           "monthly_budget": "Manual monthly credit or budget",
           "daily_spend_warning": "Daily spend warning",
           "remaining_credit_warning": "Remaining credit warning",
@@ -46,8 +45,6 @@
       }
     },
     "error": {
-      "invalid_auth": "The Anthropic Admin API key is invalid or lacks Usage and Cost Admin API access.",
-      "cannot_connect": "Could not connect to the Anthropic Admin API.",
       "invalid_json": "Aliases must be valid JSON."
     }
   },
@@ -73,7 +70,7 @@
   "issues": {
     "invalid_admin_key": {
       "title": "Anthropic Admin API key is invalid",
-      "description": "Update the Anthropic Usage Monitor API key in integration options."
+      "description": "Complete reauthentication for Anthropic Usage Monitor from Settings > Devices & services."
     }
   }
 }

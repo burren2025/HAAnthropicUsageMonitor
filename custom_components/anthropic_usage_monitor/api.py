@@ -18,7 +18,7 @@ QueryValue = str | int | float | list[str]
 _LOGGER = logging.getLogger(__name__)
 ANTHROPIC_VERSION = "2023-06-01"
 DAILY_BUCKET_LIMIT = 31
-USER_AGENT = "HAAnthropicUsageMonitor/0.1.3 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
+USER_AGENT = "HAAnthropicUsageMonitor/0.1.4 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
 
 
 class AnthropicUsageError(Exception):
