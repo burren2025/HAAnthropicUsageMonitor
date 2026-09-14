@@ -17,7 +17,7 @@ QueryValue = str | int | float | list[str]
 
 _LOGGER = logging.getLogger(__name__)
 ANTHROPIC_VERSION = "2023-06-01"
-USER_AGENT = "HAAnthropicUsageMonitor/0.1.1 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
+USER_AGENT = "HAAnthropicUsageMonitor/0.1.2 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
 
 
 class AnthropicUsageError(Exception):
@@ -204,7 +204,7 @@ class AnthropicAdminClient:
             )
         if response.status == 403:
             detail = _redact_message(await response.text())
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Anthropic Admin API request lacks permission for this endpoint: %s",
                 detail,
             )

@@ -118,7 +118,6 @@ TOTAL_DESCRIPTIONS: tuple[AnthropicSensorDescription, ...] = (
         key="estimated_credit_remaining",
         translation_key="estimated_credit_remaining",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:wallet",
         value_fn=lambda c: c.data.budget.get("estimated_remaining"),
         attrs_fn=lambda c: c.data.budget,
