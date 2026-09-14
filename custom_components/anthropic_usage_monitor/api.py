@@ -17,7 +17,8 @@ QueryValue = str | int | float | list[str]
 
 _LOGGER = logging.getLogger(__name__)
 ANTHROPIC_VERSION = "2023-06-01"
-USER_AGENT = "HAAnthropicUsageMonitor/0.1.2 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
+DAILY_BUCKET_LIMIT = 31
+USER_AGENT = "HAAnthropicUsageMonitor/0.1.3 (https://github.com/burren2025/HAAnthropicUsageMonitor)"
 
 
 class AnthropicUsageError(Exception):
@@ -92,7 +93,7 @@ class AnthropicAdminClient:
         *,
         starting_at: date,
         ending_at: date,
-        limit: int = 100,
+        limit: int = DAILY_BUCKET_LIMIT,
         group_by: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Fetch all pages from Anthropic's user usage report endpoint."""
@@ -100,7 +101,7 @@ class AnthropicAdminClient:
             "starting_at": _rfc3339_start(starting_at),
             "ending_at": _rfc3339_start(ending_at),
             "bucket_width": "1d",
-            "limit": limit,
+            "limit": _daily_bucket_limit(limit),
         }
         if group_by:
             params["group_by[]"] = group_by
@@ -114,7 +115,7 @@ class AnthropicAdminClient:
         *,
         starting_at: date,
         ending_at: date,
-        limit: int = 100,
+        limit: int = DAILY_BUCKET_LIMIT,
         group_by: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Fetch all pages from Anthropic's user cost report endpoint."""
@@ -122,7 +123,7 @@ class AnthropicAdminClient:
             "starting_at": _rfc3339_start(starting_at),
             "ending_at": _rfc3339_start(ending_at),
             "bucket_width": "1d",
-            "limit": limit,
+            "limit": _daily_bucket_limit(limit),
         }
         if group_by:
             params["group_by[]"] = group_by
@@ -269,6 +270,11 @@ def _normalize_query_params(params: dict[str, Any]) -> dict[str, QueryValue]:
         elif value is not None:
             normalized[key] = value
     return normalized
+
+
+def _daily_bucket_limit(limit: int) -> int:
+    """Keep daily report requests within Anthropic's documented range."""
+    return min(max(limit, 1), DAILY_BUCKET_LIMIT)
 
 
 def _rfc3339_start(value: date) -> str:

@@ -87,8 +87,30 @@ async def test_fetch_usage_report_handles_pagination():
     assert rows[0]["starting_at"] == "2026-01-01T00:00:00Z"
     assert session.calls[1]["params"]["page"] == "next"
     assert session.calls[0]["params"]["starting_at"] == "2026-01-01T00:00:00Z"
+    assert session.calls[0]["params"]["limit"] == 31
     assert session.calls[0]["headers"]["x-api-key"] == "admin-key"
     assert session.calls[0]["headers"]["anthropic-version"] == "2023-06-01"
+
+
+@pytest.mark.asyncio
+async def test_daily_report_limits_are_clamped_to_anthropic_maximum():
+    session = FakeSession(
+        [
+            FakeResponse(200, {"data": [], "has_more": False}),
+            FakeResponse(200, {"data": [], "has_more": False}),
+        ]
+    )
+    client = AnthropicAdminClient(session, "admin-key")
+
+    await client.fetch_usage_report(
+        starting_at=date(2026, 1, 1), ending_at=date(2026, 2, 1), limit=100
+    )
+    await client.fetch_cost_report(
+        starting_at=date(2026, 1, 1), ending_at=date(2026, 2, 1), limit=100
+    )
+
+    assert session.calls[0]["params"]["limit"] == 31
+    assert session.calls[1]["params"]["limit"] == 31
 
 
 @pytest.mark.asyncio
